@@ -32,7 +32,6 @@
 
 package org.cbioportal.database.annotator;
 
-import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
@@ -96,19 +95,8 @@ public class AnnotateRecordsWriter  implements ItemStreamWriter<MutationEvent>{
             pstmt.setInt(9, annotatedEvent.getONCOTATOR_PROTEIN_POS_START());
             pstmt.setInt(10, annotatedEvent.getONCOTATOR_PROTEIN_POS_END());
             pstmt.setInt(11, annotatedEvent.getMUTATION_EVENT_ID());
-            try {
-                Integer rs = pstmt.executeUpdate();
-                log.info("Updated mutation event. Mutation event id: " + annotatedEvent.getMUTATION_EVENT_ID());
-            }
-            catch (MySQLIntegrityConstraintViolationException e) {
-                List<MutationEvent> mutationEvents = getDuplicatedMutationEvents(annotatedEvent);
-                for (MutationEvent event : mutationEvents) {
-                    if (event.getPROTEIN_CHANGE().equals(annotatedEvent.getPROTEIN_CHANGE())) {
-                        updateMutationsInDb(annotatedEvent, event);
-                        deleteMutationEvent(annotatedEvent);
-                    }
-                }
-            }
+            Integer rs = pstmt.executeUpdate();
+            log.info("Updated mutation event. Mutation event id: " + annotatedEvent.getMUTATION_EVENT_ID());
         }
         else {
             log.error("Event " + annotatedEvent.getMUTATION_EVENT_ID() + " unable to be fixed.");
